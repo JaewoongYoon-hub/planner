@@ -576,11 +576,14 @@ function openEditor(d, idx, fresh, anchorEl, ev){
   }
   const planRow = h("div",{class:"edrow"+(st.planOn?"":" off")},
     rangeRow("p","계획", ()=>({s:st.s, d:st.d}), (s,d)=>{ st.s=s; st.d=d; }));
-  const actRow = h("div",{class:"edrow"+(st.act==="diff"?"":" off")},
-    rangeRow("a","실적", ()=>({s:st.as, d:st.ad}), (s,d)=>{ st.as=s; st.ad=d; }));
-  const planToggle = chips("pt", [[true,"계획 있음"],[false,"계획 없이 한 일"]], st.planOn, "계획 여부", v=>{ st.planOn=v; planRow.classList.toggle("off",!v);
+  // 실적이 계획과 다르면: 실제 시작 ~ 종료 시각
+  const mkActRange = () => rangeRow("a","실적", ()=>({s:st.as, d:st.ad}), (s,d)=>{ st.as=s; st.ad=d; st.actTouched=true; });
+  const actRow = h("div",{class:"edrow"+(st.act==="diff"?"":" off")}, mkActRange());
+  const planToggle = chips("pt", [[true,"계획 있음"],[false,"계획 없이 한 일"]], st.planOn, "계획 여부", v=>{ st.planOn=v; planRow.classList.toggle("off",!v); setTimeout(fitEditor,0);
     if(!v && st.act!=="diff"){ st.act="diff"; actRow.classList.remove("off"); actChips.replaceWith(actChips=mkActChips()); } });
-  const mkActChips = () => chips("ak", [["none","아직"],["same","계획대로 함"],["diff","시간이 달랐음"]], st.act, "실적", v=>{ st.act=v; actRow.classList.toggle("off", v!=="diff"); });
+  const mkActChips = () => chips("ak", [["none","아직"],["same","계획대로 함"],["diff","시간이 달랐음"]], st.act, "실적", v=>{ st.act=v;
+    if(v==="diff" && !st.actTouched && st.planOn){ st.as=st.s; st.ad=st.d; actRow.replaceChildren(mkActRange()); }
+    actRow.classList.toggle("off", v!=="diff"); fitEditor(); });
   let actChips = mkActChips();
   function commit(){
     if(!st.t.trim()){ if(idx>=0){ blocks.splice(idx,1); saveBlocks(d,blocks); } closeEditor(); render(); return; }
