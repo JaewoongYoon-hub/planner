@@ -148,6 +148,9 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .edlab{font-size:11px;color:var(--sub);margin-top:2px}
 .edrow{display:flex;flex-direction:column;gap:6px}
 .edrow.off{display:none}
+.edrange{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.edrange .tilde{color:var(--sub)}
+.durlab{font-size:12px;color:var(--sub);margin-left:4px}
 .ed select{font:inherit;font-family:var(--f-num);color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:5px;height:32px;padding:0 6px;width:max-content}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
 .chip{font-size:12.5px;padding:5px 10px;border:1px solid var(--line);border-radius:999px;min-height:30px}
@@ -532,7 +535,6 @@ function dayBody(d){
 }
 
 /* editor panel */
-const DURS = [30,60,90,120,180,240];
 let ed = null;
 function timeSelect(id, val){
   const sel = h("select",{id, "aria-label":"시작 시각"});
@@ -556,11 +558,26 @@ function openEditor(d, idx, fresh, anchorEl, ev){
     act: b.as==null ? "none" : (b.s!=null && b.as===b.s && b.ad===b.d ? "same" : "diff"), as: b.as ?? b.s ?? 540, ad: b.ad || b.d || 60 };
   const txt = h("input",{id:"ed-text",placeholder:"무엇을 하나요?",value:st.t,autocomplete:"off",enterkeyhint:"done",
     oninput:()=>st.t=txt.value, onkeydown:e=>{ if(e.key==="Enter" && !e.isComposing){ e.preventDefault(); commit(); } if(e.key==="Escape") closeEditor(); }});
-  const pSel = timeSelect("ed-ps", st.s); pSel.onchange=()=>{ st.s=+pSel.value; };
-  const aSel = timeSelect("ed-as", st.as); aSel.onchange=()=>{ st.as=+aSel.value; };
-  const durList = DURS.map(m=>[m, fmtDur(m)]);
-  const planRow = h("div",{class:"edrow"+(st.planOn?"":" off")}, pSel, chips("pd", durList, st.d, "계획 시간", v=>st.d=v));
-  const actRow = h("div",{class:"edrow"+(st.act==="diff"?"":" off")}, aSel, chips("ad", durList, st.ad, "실적 시간", v=>st.ad=v));
+  // 시작 ~ 종료 시각 고르기
+  function rangeRow(prefix, label, get, set){
+    const sSel = timeSelect(`ed-${prefix}s`, get().s);
+    const eSel = h("select",{id:`ed-${prefix}e`,"aria-label":`${label} 종료 시각`});
+    const fillEnd = () => {
+      const {s, d} = get(); eSel.textContent = "";
+      for(let m=s+30; m<=DAY_END; m+=30){ const o=h("option",{value:m},fmtT(m)); if(m===s+d) o.selected=true; eSel.append(o); }
+    };
+    const dur = h("span",{class:"durlab"});
+    const showDur = () => dur.textContent = fmtDur(get().d);
+    sSel.setAttribute("aria-label", `${label} 시작 시각`);
+    sSel.onchange = () => { const {d} = get(), ns = +sSel.value; set(ns, Math.min(d, DAY_END-ns)); fillEnd(); showDur(); };
+    eSel.onchange = () => { const {s} = get(); set(s, +eSel.value - s); showDur(); };
+    fillEnd(); showDur();
+    return h("div",{class:"edrange"}, sSel, h("span",{class:"tilde"},"~"), eSel, dur);
+  }
+  const planRow = h("div",{class:"edrow"+(st.planOn?"":" off")},
+    rangeRow("p","계획", ()=>({s:st.s, d:st.d}), (s,d)=>{ st.s=s; st.d=d; }));
+  const actRow = h("div",{class:"edrow"+(st.act==="diff"?"":" off")},
+    rangeRow("a","실적", ()=>({s:st.as, d:st.ad}), (s,d)=>{ st.as=s; st.ad=d; }));
   const planToggle = chips("pt", [[true,"계획 있음"],[false,"계획 없이 한 일"]], st.planOn, "계획 여부", v=>{ st.planOn=v; planRow.classList.toggle("off",!v);
     if(!v && st.act!=="diff"){ st.act="diff"; actRow.classList.remove("off"); actChips.replaceWith(actChips=mkActChips()); } });
   const mkActChips = () => chips("ak", [["none","아직"],["same","계획대로 함"],["diff","시간이 달랐음"]], st.act, "실적", v=>{ st.act=v; actRow.classList.toggle("off", v!=="diff"); });
