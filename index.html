@@ -114,12 +114,14 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .dhead .dw{font-size:12px}
 .dtodo{padding:2px 5px 4px;border-right:1px solid var(--line);min-width:0}
 .dtodo .lab{font-size:10px;color:var(--sub);height:14px}
-.tt{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;border-top:1px solid var(--line)}
+.tt{display:grid;grid-template-rows:auto 1fr;min-height:0;border-top:1px solid var(--line);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;--slot:17px}
+.tt > .tthead{position:sticky;top:0;z-index:5;background:var(--paper)}
+.gut,.dbody{min-height:calc(var(--slot) * 38)}
 .tthead{display:grid;grid-template-columns:var(--strip) var(--strip) 1fr;font-size:9px;color:var(--sub);border-right:1px solid var(--line);border-bottom:1px solid var(--line);line-height:1.6;--strip:13px}
 .tthead span{font-size:9px;text-align:center}
 .tthead span.tl{writing-mode:horizontal-tb;letter-spacing:0;font-size:10px;line-height:1.6;padding-left:4px;text-align:left}
 .gut{position:relative;display:grid;grid-template-rows:repeat(38,minmax(0,1fr))}
-.gl{font-family:var(--f-num);font-size:10px;color:var(--sub);text-align:center;line-height:1.2;border-top:1px solid var(--line)}
+.gl{font-family:var(--f-num);font-size:11.5px;color:var(--ink);opacity:.75;text-align:center;line-height:1.2;border-top:1px solid var(--line)}
 .gl.half{border-top:1px dashed var(--faint)}
 .dbody{--strip:13px;--strips:calc(var(--strip) * 2 + 2px);position:relative;border-right:1px solid var(--line);min-width:0;min-height:0;overflow:hidden;cursor:pointer;touch-action:manipulation}
 .dbody::before,.dbody::after{content:"";position:absolute;top:0;bottom:0;width:0;border-left:1px solid var(--faint);z-index:1;pointer-events:none}
@@ -130,10 +132,10 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .bar{position:absolute;width:calc(var(--strip) - 3px);border-radius:2px;z-index:2;pointer-events:none}
 .bar.plan{left:1px;background:var(--acc);opacity:.75}
 .bar.act{left:calc(var(--strip) + 1px);background:var(--blue);opacity:.8}
-.blk{position:absolute;z-index:3;text-align:left;font-size:11.5px;line-height:1.2;padding:0 4px;overflow:hidden;
+.blk{position:absolute;z-index:3;text-align:left;font-size:12.5px;line-height:1.2;padding:0 4px;overflow:hidden;
   background:var(--blkbg);border-left:2px solid var(--acc);border-radius:2px;color:var(--ink);display:flex;align-items:flex-start}
 .blk span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;word-break:keep-all;overflow-wrap:anywhere}
-.blk.short{font-size:10.5px;line-height:1.05}
+.blk.short{font-size:11.5px;line-height:1.3}
 .blk.short span{-webkit-line-clamp:1}
 .blk.done{border-left-color:var(--blue)}
 .blk.actonly{border-left-color:var(--blue);background:var(--actbg)}
@@ -682,7 +684,13 @@ function render(){
   } else v.append(...weekSpread());
   renderTabs();
   setSave(...saveText);
+  const tts = [...v.querySelectorAll(".tt")];
+  if(tts.length){
+    if(ttScroll == null){ const slot = (tts[0].scrollHeight - tts[0].clientHeight) > 0 ? tts[0].querySelector(".gl").offsetHeight : 0; ttScroll = slot * 4; } // start at 7:00
+    tts.forEach(t => { t.scrollTop = ttScroll; t.addEventListener("scroll", () => { if(syncing) return; syncing = true; ttScroll = t.scrollTop; tts.forEach(o => { if(o !== t) o.scrollTop = t.scrollTop; }); requestAnimationFrame(()=>syncing=false); }, {passive:true}); });
+  }
 }
+let ttScroll = null, syncing = false;
 function requestRender(){
   const a = document.activeElement;
   if(a && (a.tagName==="INPUT"||a.tagName==="TEXTAREA") && a.closest("#view")) pendingRender = true;
