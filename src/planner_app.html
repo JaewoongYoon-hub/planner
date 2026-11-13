@@ -106,11 +106,11 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .dtodo .lab{font-size:10px;color:var(--sub);height:14px}
 .tt{display:grid;grid-template-rows:auto 1fr;min-height:0;border-top:1px solid var(--line);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;--slot:17px}
 .tt > .tthead{position:sticky;top:0;z-index:5;background:var(--paper)}
-.gut,.dbody{min-height:calc(var(--slot) * 38)}
+.gut,.dbody{min-height:calc(var(--slot) * 40)}
 .tthead{display:grid;grid-template-columns:var(--strip) var(--strip) 1fr;font-size:9px;color:var(--sub);border-right:1px solid var(--line);border-bottom:1px solid var(--line);line-height:1.6;--strip:13px}
 .tthead span{font-size:9px;text-align:center}
 .tthead span.tl{writing-mode:horizontal-tb;letter-spacing:0;font-size:10px;line-height:1.6;padding-left:4px;text-align:left}
-.gut{position:relative;display:grid;grid-template-rows:repeat(38,minmax(0,1fr))}
+.gut{position:relative;display:grid;grid-template-rows:repeat(40,minmax(0,1fr))}
 .gl{font-family:var(--f-num);font-size:11.5px;color:var(--ink);opacity:.75;text-align:center;line-height:1.2;border-top:1px solid var(--line)}
 .gl.half{border-top:1px dashed var(--faint)}
 .dbody{--strip:13px;--strips:calc(var(--strip) * 2 + 2px);position:relative;border-right:1px solid var(--line);min-width:0;min-height:0;overflow:hidden;cursor:pointer;touch-action:manipulation}
@@ -194,7 +194,7 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 (() => {
 const DOW_MON = ["월","화","수","목","금","토","일"];
 const DOW_SUN = ["일","월","화","수","목","금","토"];
-const DAY_START = 5*60, DAY_END = 24*60, SLOTS = (DAY_END-DAY_START)/30; // 5시 ~ 자정, 30분 칸
+const DAY_START = 5*60, DAY_END = 25*60, SLOTS = (DAY_END-DAY_START)/30; // 5시 ~ 자정, 30분 칸
 const isLunch = k => DAY_START + k*30 >= 720 && DAY_START + k*30 < 780;
 const GOAL_ROWS = 4, TODO_MAX = 5, TODO_MIN = 3;
 const HOLI = {
@@ -481,7 +481,7 @@ function blocksOf(d){
 }
 const startOf = b => b.s!=null ? b.s : b.as;
 const durOf = b => b.s!=null ? b.d : b.ad;
-function fmtT(min){ const hh=Math.floor(min/60), mm=min%60; return `${hh}:${pad(mm)}`; }
+function fmtT(min){ const hh=Math.floor(min/60), mm=min%60; return `${hh>=24?"새벽 "+(hh-24):hh}:${pad(mm)}`; }
 function fmtDur(m){ const hh=Math.floor(m/60), mm=m%60; return (hh?hh+"시간":"") + (mm? (hh?" ":"")+mm+"분" : ""); }
 const pct = min => ((min - DAY_START) / (DAY_END - DAY_START) * 100) + "%";
 function saveBlocks(d, blocks){ edit(dayId(d), x=>{ x.blocks = blocks; delete x.plan; delete x.act; }); }
