@@ -789,8 +789,10 @@ function weekSpread(){
 }
 
 /* ---------- text size (kept per device) ---------- */
-const TS = [0.9, 1, 1.15, 1.3], TS_NAMES = ["작게","보통","크게","아주 크게"];
-let tsIdx = (()=>{ const v = lsRead("plandoPlanner.textSize"); return (v>=0 && v<TS.length) ? v : 1; })();
+const TS = [0.7, 0.8, 0.9, 1, 1.15, 1.3, 1.5, 1.75], TS_NAMES = ["더더 작게","더 작게","작게","보통","크게","아주 크게","더 크게","더더 크게"];
+let tsIdx = (()=>{ let v = lsRead("plandoPlanner.textSize2");
+  if (v==null){ const o = lsRead("plandoPlanner.textSize"); v = (o>=0 && o<4) ? o+2 : 3; }
+  return (v>=0 && v<TS.length) ? v : 3; })();
 function applyTs(){ document.documentElement.style.setProperty("--ts", TS[tsIdx]); }
 applyTs();
 
@@ -804,7 +806,7 @@ function renderTabs(){
     h("button",{class:"tab big"+(ui.view==="week"?" on":""),onclick:()=>go("week",ui.view==="month"?mkDate(anchor.getFullYear(),anchor.getMonth(),1):anchor),"aria-pressed":ui.view==="week"},"주",h("br"),"간"),
     h("button",{class:"tab today",onclick:()=>go(ui.view,today)},"오늘"),
     h("button",{class:"tab today tsz",title:"글자 크기 (누를 때마다 바뀜)","aria-label":`글자 크기: ${TS_NAMES[tsIdx]}`,onclick:()=>{
-      tsIdx = (tsIdx+1) % TS.length; lsWrite("plandoPlanner.textSize", tsIdx); applyTs(); renderTabs(); }}, h("span",{class:"tsa"},"가"), h("small",null,TS_NAMES[tsIdx])),
+      tsIdx = (tsIdx+1) % TS.length; lsWrite("plandoPlanner.textSize2", tsIdx); applyTs(); renderTabs(); }}, h("span",{class:"tsa"},"가"), h("small",null,TS_NAMES[tsIdx])),
     h("div",{class:"cap"},String(yr)));
   for(let m=0;m<12;m++){
     t.append(h("button",{class:"tab sm"+(m===curMonth?" on":""),onclick:()=>{
