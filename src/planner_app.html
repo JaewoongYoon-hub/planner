@@ -118,6 +118,9 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .gut{position:relative;display:grid;grid-template-rows:repeat(40,minmax(0,1fr))}
 .gl{font-family:var(--f-num);font-size:11.5px;color:var(--ink);opacity:.75;text-align:center;line-height:1.2;border-top:1px solid var(--line)}
 .gl.half{border-top:1px dashed var(--faint)}
+.gl:not(.half){position:relative;z-index:1}
+.gl .gn{display:inline-block;background:var(--paper);padding:0 3px;border-radius:2px}
+.gl.lunch .gn{background:var(--lunch)}
 .dbody{--strip:13px;--strips:calc(var(--strip) * 2 + 2px);position:relative;border-right:1px solid var(--line);min-width:0;min-height:0;overflow:hidden;cursor:pointer;touch-action:manipulation}
 .dbody::before,.dbody::after{content:"";position:absolute;top:0;bottom:0;width:0;border-left:1px solid var(--faint);z-index:1;pointer-events:none}
 .dbody::before{left:var(--strip)} .dbody::after{left:calc(var(--strip) * 2);border-left-color:var(--line)}
@@ -519,7 +522,7 @@ function dayColumns(days){
   });
   const tt = h("div",{class:"tt",style:`grid-template-columns:${cols}`});
   const gut = h("div",{class:"gut"});
-  for(let k=0;k<SLOTS;k++) gut.append(h("div",{class:"gl"+(k%2?" half":"")+(isLunch(k)?" lunch":"")}, k%2 ? "" : hourLabel(5+k/2)));
+  for(let k=0;k<SLOTS;k++) gut.append(h("div",{class:"gl"+(k%2?" half":"")+(isLunch(k)?" lunch":"")}, k%2 ? "" : h("span",{class:"gn"},hourLabel(5+k/2))));
   tt.append(h("div",{class:"tthead"}), ...days.map(()=>h("div",{class:"tthead"},h("span",{class:"pa",title:"계획"},"계획"),h("span",{class:"pa",title:"실행"},"실행"),h("span",{class:"tl"}))));
   tt.append(gut);
   days.forEach(d=>tt.append(dayBody(d)));
