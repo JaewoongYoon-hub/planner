@@ -167,6 +167,19 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .tab.today{height:28px;font-size:11px;border-style:dashed}
 
 .foot{font-size:10px;color:var(--sub)}
+.pstrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.pday{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 0;border:1px solid var(--faint);border-radius:8px;position:relative}
+.pday .pdw{font-size:11px;color:var(--sub)} .pday .pdn{font-family:var(--f-num);font-size:16px;font-weight:600}
+.pday .pdw.red,.pday .pdn.red{color:var(--red)} .pday .pdw.blue,.pday .pdn.blue{color:var(--blue)}
+.pday.on{background:var(--ink);border-color:var(--ink)} .pday.on .pdw,.pday.on .pdn{color:var(--paper)}
+.pday.today:not(.on){border-color:var(--acc)}
+.pday.has::after{content:"";position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.pgoals summary{font-size:12px;color:var(--sub);cursor:pointer;padding:4px 0}
+.page.phone{min-height:auto}
+.page.phone .wk{min-height:70vh}
+.page.phone .tt{--slot:22px}
+.page.phone .blk{font-size:14px}
+.page.phone .dbody{--strip:16px}
 
 @media (max-width:860px){
   body{overflow:auto;height:auto}
@@ -620,6 +633,35 @@ function fitEditor(){
 if(window.visualViewport){ visualViewport.addEventListener("resize", fitEditor); visualViewport.addEventListener("scroll", fitEditor); }
 function closeEditor(){ document.querySelectorAll(".ed,.scrim").forEach(e=>e.remove()); ed=null; }
 
+/* phone: one day at a time, with the week's days in a strip on top */
+const isPhone = () => innerWidth < 700;
+function phoneDay(){
+  const d = anchor, mon = monday(d), thu = addDays(mon,3), ym = ymOf(thu);
+  const strip = h("div",{class:"pstrip"});
+  for(let i=0;i<7;i++){
+    const x = addDays(mon,i), k = iso(x), dw = x.getDay();
+    const c = HOLI[k]||dw===0 ? " red" : dw===6 ? " blue" : "";
+    const has = filled(todos(x)) || blocksOf(x).length;
+    strip.append(h("button",{class:"pday"+(k===iso(d)?" on":"")+(k===iso(today)?" today":"")+(has?" has":""),onclick:()=>go("week",x),"aria-label":`${x.getMonth()+1}월 ${x.getDate()}일`},
+      h("span",{class:"pdw"+c},DOW_MON[(dw+6)%7]), h("span",{class:"pdn"+c},String(x.getDate()))));
+  }
+  const goals = h("details",{class:"pgoals"}, h("summary",null,"이달의 목표 · 잊지 말 것"),
+    h("div",{class:"goals",style:"grid-template-columns:repeat(2,minmax(0,1fr));border-top:0"}, goalsBox(ym,["forget","work","personal","study"])));
+  try{ if(lsRead("plandoPlanner.goalsOpen")) goals.open = true; }catch(e){}
+  goals.addEventListener("toggle", ()=>lsWrite("plandoPlanner.goalsOpen", goals.open));
+  return h("section",{class:"page phone","aria-label":"하루 보기"},
+    h("header",{class:"hd"},
+      h("span",{class:"mn"},String(thu.getMonth()+1)), h("span",{class:"ml"},"월",h("b",null,String(thu.getFullYear()))),
+      h("span",{class:"sp"}),
+      h("div",{class:"nav"},
+        h("button",{onclick:()=>go("week",addDays(mon,-7)),"aria-label":"이전 주"},"◀ 주"),
+        h("button",{onclick:()=>go("week",addDays(mon,7)),"aria-label":"다음 주"},"주 ▶"))),
+    strip, goals, dayColumns([d]),
+    h("div",{class:"foot"},h("span",{id:"save",class:"save"},saveText[0]), " · 옆으로 밀면 다음 날"));
+}
+let wasPhone = isPhone();
+addEventListener("resize", ()=>{ if(isPhone()!==wasPhone){ wasPhone=isPhone(); requestRender(); } });
+
 function weekSpread(){
   const mon = monday(anchor), thu = addDays(mon,3), ym = ymOf(thu);
   const days = Array.from({length:7},(_,i)=>addDays(mon,i));
@@ -671,7 +713,8 @@ function render(){
   if(ui.view==="month"){
     const y = anchor.getFullYear(), m = anchor.getMonth();
     v.append(monthPage(y,m,true), monthPage(mkDate(y,m+1,1).getFullYear(), mkDate(y,m+1,1).getMonth(), false));
-  } else v.append(...weekSpread());
+  } else if(isPhone()) v.append(phoneDay());
+  else v.append(...weekSpread());
   renderTabs();
   setSave(...saveText);
   const tts = [...v.querySelectorAll(".tt")];
@@ -715,7 +758,7 @@ document.addEventListener("keydown", e=>{
     if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy)*2 || Date.now()-st > 700) return;
     const step = dx < 0 ? 1 : -1;
     if(ui.view==="month") go("month", mkDate(anchor.getFullYear(), anchor.getMonth()+step, 1));
-    else go("week", addDays(anchor, 7*step));
+    else go("week", addDays(anchor, (isPhone() ? 1 : 7)*step));
   }, {passive:true});
 })();
 render();

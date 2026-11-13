@@ -16,7 +16,12 @@ head = '''<!doctype html><html lang="ko"><head><meta charset="utf-8">
 extra = r'''
 <script>
 /* offline extras: service worker, persistent storage, backup export/import */
-if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator){
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js", {updateViaCache: "none"}).then(r => r.update()).catch(()=>{});
+  // a new version took over: reload once so the new screen shows right away
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if(hadController && !window.__reloaded){ window.__reloaded = true; location.reload(); } });
+}
 try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
 (function(){
   const tabs = document.getElementById("tabs");
