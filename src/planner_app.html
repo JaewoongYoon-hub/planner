@@ -696,6 +696,20 @@ document.addEventListener("keydown", e=>{
 });
 
 { const cached = lsRead(LS_KEY); if(cached && typeof cached==="object") store = cached; }
+/* swipe left / right with a finger to turn the page (S Pen and mouse are ignored) */
+(() => {
+  let sx=0, sy=0, st=0, on=false;
+  const v = document.getElementById("view");
+  v.addEventListener("touchstart", e => { if(e.touches.length!==1 || document.querySelector(".ed")) { on=false; return; }
+    const t=e.touches[0]; if(t.touchType==="stylus"){ on=false; return; } sx=t.clientX; sy=t.clientY; st=Date.now(); on=true; }, {passive:true});
+  v.addEventListener("touchend", e => { if(!on) return; on=false;
+    const t=e.changedTouches[0], dx=t.clientX-sx, dy=t.clientY-sy;
+    if(Math.abs(dx) < 70 || Math.abs(dx) < Math.abs(dy)*2 || Date.now()-st > 700) return;
+    const step = dx < 0 ? 1 : -1;
+    if(ui.view==="month") go("month", mkDate(anchor.getFullYear(), anchor.getMonth()+step, 1));
+    else go("week", addDays(anchor, 7*step));
+  }, {passive:true});
+})();
 render();
 initStore().then(()=>{});
 })();

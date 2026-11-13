@@ -1,4 +1,4 @@
-const CACHE = "planner-v5";
+const CACHE = "planner-v6";
 const CORE = ["./", "index.html", "manifest.json", "icon.svg", "icon-192.png", "icon-512.png", "config.js", "sync.js", "lib/firebase-app.js", "lib/firebase-auth.js", "lib/firebase-firestore.js"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
