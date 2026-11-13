@@ -78,7 +78,7 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .mk[data-s="2"]::after{content:"✕";color:var(--sub)}
 .mk[data-s="3"]::after{content:"←";color:var(--sub)}
 .mk[data-s="4"]::after{content:"→";color:var(--blue)}
-.ln.done input{color:var(--sub);text-decoration:line-through}
+.ln.done input{color:var(--sub)}
 .ln.cancel input{color:var(--line);text-decoration:line-through}
 
 /* month grid */
@@ -202,7 +202,7 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .pmc.today .pmn{color:var(--acc)}
 .pmh{font-size:8.5px;color:var(--red);line-height:1.1;white-space:nowrap;overflow:hidden}
 .pmi{font-size:9.5px;line-height:1.2;word-break:break-all;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;border-radius:2px;padding:0 2px}
-.pmi.todo{color:var(--ink)} .pmi.todo.done{color:var(--sub);text-decoration:line-through}
+.pmi.todo{color:var(--ink)} .pmi.todo.done{color:var(--sub)} .pmi.todo.cancel{color:var(--line);text-decoration:line-through}
 .pmi.pmb{background:var(--blkbg)}
 .pmore{font-size:9px;color:var(--sub)}
 .pagenda{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--faint);padding-top:8px}
@@ -733,7 +733,7 @@ function phoneMonth(y, m){
     if(d.getMonth()!==m){ grid.append(h("div",{class:"pmc out"})); continue; }
     const dw = d.getDay(), hol = HOLI[k];
     const c = hol||dw===0 ? " red" : dw===6 ? " blue" : "";
-    const items = [...todos(d).filter(t=>t&&(t.t||"").trim()).map(t=>({t:t.t, k:"todo"+((t.s===2||t.s===3)?" done":"")})),
+    const items = [...todos(d).filter(t=>t&&(t.t||"").trim()).map(t=>({t:t.t, k:"todo"+(t.s===2?" done":t.s===3?" cancel":"")})),
       ...blocksOf(d).filter(b=>(b.t||"").trim()).sort((a,b)=>startOf(a)-startOf(b)).map(b=>({t:b.t, k:"pmb"}))];
     grid.append(h("button",{class:"pmc"+(dw===0?" sun":"")+(k===iso(today)?" today":"")+(k===iso(monthSel)?" sel":""),
       onclick:()=>{ monthSel = d; render(); }, "aria-label":`${m+1}월 ${d.getDate()}일`},
