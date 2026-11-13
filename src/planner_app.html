@@ -176,8 +176,27 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .pday.has::after{content:"";position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
 .pgoals summary{font-size:12px;color:var(--sub);cursor:pointer;padding:4px 0}
 .page.phone{min-height:auto}
-.page.phone .wk{display:block}
-.page.phone .tt{--slot:22px;overflow:visible}
+/* phone day view fits one screen: the timetable shares out whatever height is left */
+html:has(body.phonefit){height:100%}
+body.phonefit{height:100%;overflow:hidden}
+body.phonefit .app{height:100%;grid-template-rows:auto minmax(0,1fr)}
+body.phonefit .tabs{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px}
+body.phonefit .tab.sm{display:none}
+body.phonefit .spread{min-height:0}
+body.phonefit .page.phone{height:100%;min-height:0;padding:8px 10px 6px;gap:6px}
+body.phonefit .page.phone .hd{min-height:26px}
+body.phonefit .page.phone .hd .mn{font-size:24px}
+body.phonefit .page.phone .dhead{display:none}
+body.phonefit .page.phone .dtodo .ln{height:24px}
+body.phonefit .page.phone .wk{flex:1;min-height:0}
+body.phonefit .page.phone .tt{overflow:hidden}
+body.phonefit .page.phone .gut, body.phonefit .page.phone .dbody{min-height:0}
+body.phonefit .page.phone .pday{padding:3px 0}
+body.phonefit .page.phone .pday .pdn{font-size:14px}
+body.phonefit .page.phone .gl{font-size:10.5px;line-height:1}
+body.phonefit .page.phone .blk{font-size:12px;line-height:1.15}
+body.phonefit .page.phone .blk.short span{-webkit-line-clamp:1}
+body.phonefit .pgoals[open]{max-height:40vh;overflow:auto}
 .page.phone .blk{font-size:14px}
 .page.phone .dbody{--strip:16px}
 
@@ -715,6 +734,7 @@ function render(){
     v.append(monthPage(y,m,true), monthPage(mkDate(y,m+1,1).getFullYear(), mkDate(y,m+1,1).getMonth(), false));
   } else if(isPhone()) v.append(phoneDay());
   else v.append(...weekSpread());
+  document.body.classList.toggle("phonefit", ui.view==="week" && isPhone());
   renderTabs();
   setSave(...saveText);
   const tts = [...v.querySelectorAll(".tt")];
