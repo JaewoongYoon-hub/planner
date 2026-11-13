@@ -188,6 +188,28 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .pday.on{background:var(--ink);border-color:var(--ink)} .pday.on .pdw,.pday.on .pdn{color:var(--paper)}
 .pday.today:not(.on){border-color:var(--acc)}
 .pday.has::after{content:"";position:absolute;bottom:3px;width:4px;height:4px;border-radius:50%;background:var(--acc)}
+.pmgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-top:1.5px solid var(--ink);border-left:1px solid var(--line)}
+.pmgrid .dow{font-size:11px}
+.pmc{min-width:0;min-height:62px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:2px 2px 3px;text-align:left;overflow:hidden}
+.pmc.out,.pmc.sun{background:var(--sunf)}
+.pmc.sel{outline:2px solid var(--ink);outline-offset:-2px;z-index:1}
+.pmn{font-family:var(--f-num);font-weight:600;font-size:13px;line-height:1.2}
+.pmc.today .pmn{color:var(--acc)}
+.pmh{font-size:8.5px;color:var(--red);line-height:1.1;white-space:nowrap;overflow:hidden}
+.pmi{font-size:9.5px;line-height:1.2;word-break:break-all;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;border-radius:2px;padding:0 2px}
+.pmi.todo{color:var(--ink)} .pmi.todo.done{color:var(--sub);text-decoration:line-through}
+.pmi.pmb{background:var(--blkbg)}
+.pmore{font-size:9px;color:var(--sub)}
+.pagenda{display:flex;flex-direction:column;gap:2px;border-top:1px solid var(--faint);padding-top:8px}
+.pah{display:flex;align-items:baseline;gap:4px;font-size:15px;margin-bottom:4px}
+.pah .sp{flex:1}
+.palink{font-size:13px;color:var(--blue);padding:4px 0}
+.pagenda .lab{font-size:11px;color:var(--sub)}
+.pagenda .ln{height:32px;font-size:15px}
+.pai{display:flex;gap:10px;align-items:baseline;text-align:left;padding:8px 6px;border-bottom:1px solid var(--faint);border-left:3px solid var(--acc);background:var(--blkbg);border-radius:3px;margin-top:3px}
+.pai.done{border-left-color:var(--blue)} .pai.actonly{border-left-color:var(--blue);background:var(--actbg)}
+.pat{font-family:var(--f-num);font-size:12.5px;color:var(--sub);white-space:nowrap}
+.pax{font-size:15px;min-width:0;overflow-wrap:anywhere}
 .pgoals summary{font-size:12px;color:var(--sub);cursor:pointer;padding:4px 0}
 .page.phone{min-height:auto}
 /* phone day view fits one screen: the timetable shares out whatever height is left */
@@ -195,7 +217,7 @@ html:has(body.phonefit){height:100%}
 body.phonefit{height:100%;overflow:hidden}
 body.phonefit .app{height:100%;grid-template-rows:auto minmax(0,1fr)}
 body.phonefit .tabs{flex-wrap:nowrap;overflow-x:auto;padding:6px 8px}
-body.phonefit .tab.sm{display:none}
+body.phonefit .tab.sm, body.phonemonth .tab.sm{display:none}
 body.phonefit .spread{min-height:0}
 body.phonefit .page.phone{height:100%;min-height:0;padding:8px 10px 6px;gap:6px}
 body.phonefit .page.phone .hd{min-height:26px}
@@ -692,6 +714,57 @@ function phoneDay(){
     strip, goals, dayColumns([d]),
     h("div",{class:"foot"},h("span",{id:"save",class:"save"},saveText[0]), " · 옆으로 밀면 다음 날"));
 }
+/* phone month: a compact calendar that wraps short previews, with the chosen day's list below */
+let monthSel = null;
+function phoneMonth(y, m){
+  const first = mkDate(y,m,1), last = mkDate(y,m+1,0), ym = ymOf(first);
+  if(!monthSel || monthSel.getMonth()!==m || monthSel.getFullYear()!==y)
+    monthSel = (today.getMonth()===m && today.getFullYear()===y) ? today : first;
+  const start = addDays(first, -first.getDay()), rows = Math.ceil((first.getDay()+last.getDate())/7);
+  const grid = h("div",{class:"pmgrid"});
+  DOW_SUN.forEach((n,i)=>grid.append(h("div",{class:"dow"+(i===0?" sun":i===6?" sat":"")},n)));
+  for(let i=0;i<rows*7;i++){
+    const d = addDays(start,i), k = iso(d);
+    if(d.getMonth()!==m){ grid.append(h("div",{class:"pmc out"})); continue; }
+    const dw = d.getDay(), hol = HOLI[k];
+    const c = hol||dw===0 ? " red" : dw===6 ? " blue" : "";
+    const items = [...todos(d).filter(t=>t&&(t.t||"").trim()).map(t=>({t:t.t, k:"todo"+((t.s===2||t.s===3)?" done":"")})),
+      ...blocksOf(d).filter(b=>(b.t||"").trim()).sort((a,b)=>startOf(a)-startOf(b)).map(b=>({t:b.t, k:"pmb"}))];
+    grid.append(h("button",{class:"pmc"+(dw===0?" sun":"")+(k===iso(today)?" today":"")+(k===iso(monthSel)?" sel":""),
+      onclick:()=>{ monthSel = d; render(); }, "aria-label":`${m+1}월 ${d.getDate()}일`},
+      h("span",{class:"pmn"+c}, String(d.getDate())),
+      hol ? h("span",{class:"pmh"},hol) : null,
+      ...items.slice(0,3).map(x=>h("span",{class:"pmi "+x.k},x.t)),
+      items.length>3 ? h("span",{class:"pmore"},`+${items.length-3}`) : null));
+  }
+  const d = monthSel, dw = d.getDay();
+  const agenda = h("section",{class:"pagenda"},
+    h("div",{class:"pah"}, h("b",null,`${m+1}월 ${d.getDate()}일 (${DOW_MON[(dw+6)%7]})`),
+      HOLI[iso(d)] ? h("span",{class:"hol"}," "+HOLI[iso(d)]) : null, h("span",{class:"sp"}),
+      h("button",{class:"palink",onclick:()=>go("week",d)},"하루 보기 ▶")),
+    h("div",{class:"lab"},"할 일"));
+  const n = Math.min(TODO_MAX, Math.max(TODO_MIN, filled(todos(d))+1));
+  for(let j=0;j<n;j++) agenda.append(itemLine(dayId(d),"todos",j,{nav:`pm-${iso(d)}`, grow:true}));
+  agenda.append(h("div",{class:"lab",style:"margin-top:8px"},"시간표"));
+  const bl = blocksOf(d).map((b,i)=>({b,i})).sort((a,b)=>startOf(a.b)-startOf(b.b));
+  bl.forEach(({b,i})=>agenda.append(h("button",{class:"pai"+(b.s==null?" actonly":"")+(b.as!=null&&b.s!=null?" done":""),
+    onclick:e=>openEditor(d,i,null,e.currentTarget)},
+    h("span",{class:"pat"}, `${fmtT(startOf(b))}~${fmtT(startOf(b)+durOf(b))}`), h("span",{class:"pax"}, b.t||""))));
+  agenda.append(h("button",{class:"btn",style:"margin-top:6px;align-self:flex-start",onclick:e=>openEditor(d,-1,{t:"",s:540,d:60},e.currentTarget)},"+ 일정 추가"));
+  const goals = h("details",{class:"pgoals"}, h("summary",null,"이달의 목표 · 잊지 말 것"),
+    h("div",{class:"goals",style:"grid-template-columns:repeat(2,minmax(0,1fr));border-top:0"}, goalsBox(ym,["forget","work","personal","study"])));
+  try{ if(lsRead("plandoPlanner.goalsOpen")) goals.open = true; }catch(e){}
+  goals.addEventListener("toggle", ()=>lsWrite("plandoPlanner.goalsOpen", goals.open));
+  return h("section",{class:"page phone pmonth","aria-label":`${y}년 ${m+1}월`},
+    h("header",{class:"hd"},
+      h("span",{class:"mn"},String(m+1)), h("span",{class:"ml"},"월",h("b",null,String(y))), h("span",{class:"sp"}),
+      h("div",{class:"nav"},
+        h("button",{onclick:()=>go("month",mkDate(y,m-1,1)),"aria-label":"이전 달"},"◀"),
+        h("button",{onclick:()=>go("month",mkDate(y,m+1,1)),"aria-label":"다음 달"},"▶"))),
+    goals, grid, agenda,
+    h("div",{class:"foot"},h("span",{id:"save",class:"save"},saveText[0])));
+}
+
 let wasPhone = isPhone();
 addEventListener("resize", ()=>{ if(isPhone()!==wasPhone){ wasPhone=isPhone(); requestRender(); } });
 
@@ -745,10 +818,12 @@ function render(){
   const v = document.getElementById("view"); v.textContent = "";
   if(ui.view==="month"){
     const y = anchor.getFullYear(), m = anchor.getMonth();
-    v.append(monthPage(y,m,true), monthPage(mkDate(y,m+1,1).getFullYear(), mkDate(y,m+1,1).getMonth(), false));
+    if(isPhone()) v.append(phoneMonth(y,m));
+    else v.append(monthPage(y,m,true), monthPage(mkDate(y,m+1,1).getFullYear(), mkDate(y,m+1,1).getMonth(), false));
   } else if(isPhone()) v.append(phoneDay());
   else v.append(...weekSpread());
   document.body.classList.toggle("phonefit", ui.view==="week" && isPhone());
+  document.body.classList.toggle("phonemonth", ui.view==="month" && isPhone());
   renderTabs();
   setSave(...saveText);
   const tts = [...v.querySelectorAll(".tt")];
