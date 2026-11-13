@@ -181,6 +181,11 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .tab.today{height:28px;font-size:11px;border-style:dashed}
 
 .foot{font-size:10px;color:var(--sub)}
+/* what you write scales with the 글자 크기 button */
+.ln input, .blk span, .pmi, .pax, .pl, .wnote textarea, .ed #ed-text{font-size:calc(100% * var(--ts, 1))}
+.tab.tsz{height:auto;padding:3px 0;line-height:1.1}
+.tab.tsz .tsa{font-size:15px;font-weight:600}
+.tab.tsz small{font-size:9px;color:var(--sub)}
 .pstrip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
 .pday{display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 0;border:1px solid var(--faint);border-radius:8px;position:relative}
 .pday .pdw{font-size:11px;color:var(--sub)} .pday .pdn{font-family:var(--f-num);font-size:16px;font-weight:600}
@@ -793,6 +798,12 @@ function weekSpread(){
   return [left,right];
 }
 
+/* ---------- text size (kept per device) ---------- */
+const TS = [0.9, 1, 1.15, 1.3], TS_NAMES = ["작게","보통","크게","아주 크게"];
+let tsIdx = (()=>{ const v = lsRead("plandoPlanner.textSize"); return (v>=0 && v<TS.length) ? v : 1; })();
+function applyTs(){ document.documentElement.style.setProperty("--ts", TS[tsIdx]); }
+applyTs();
+
 /* ---------- tabs ---------- */
 function renderTabs(){
   const t = document.getElementById("tabs"); t.textContent = "";
@@ -802,6 +813,8 @@ function renderTabs(){
     h("button",{class:"tab big"+(ui.view==="month"?" on":""),onclick:()=>go("month",anchor),"aria-pressed":ui.view==="month"},"월",h("br"),"간"),
     h("button",{class:"tab big"+(ui.view==="week"?" on":""),onclick:()=>go("week",ui.view==="month"?mkDate(anchor.getFullYear(),anchor.getMonth(),1):anchor),"aria-pressed":ui.view==="week"},"주",h("br"),"간"),
     h("button",{class:"tab today",onclick:()=>go(ui.view,today)},"오늘"),
+    h("button",{class:"tab today tsz",title:"글자 크기 (누를 때마다 바뀜)","aria-label":`글자 크기: ${TS_NAMES[tsIdx]}`,onclick:()=>{
+      tsIdx = (tsIdx+1) % TS.length; lsWrite("plandoPlanner.textSize", tsIdx); applyTs(); renderTabs(); }}, h("span",{class:"tsa"},"가"), h("small",null,TS_NAMES[tsIdx])),
     h("div",{class:"cap"},String(yr)));
   for(let m=0;m<12;m++){
     t.append(h("button",{class:"tab sm"+(m===curMonth?" on":""),onclick:()=>{
