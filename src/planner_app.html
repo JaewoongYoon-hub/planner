@@ -104,9 +104,13 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .dhead .dw{font-size:12px}
 .dtodo{padding:2px 5px 4px;border-right:1px solid var(--line);min-width:0}
 .dtodo .lab{font-size:10px;color:var(--sub);height:14px}
-.tt{display:grid;grid-template-rows:auto 1fr;min-height:0;border-top:1px solid var(--line);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;--slot:17px}
+.tt{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;border-top:1px solid var(--line);overflow:hidden}
 .tt > .tthead{position:sticky;top:0;z-index:5;background:var(--paper)}
-.gut,.dbody{min-height:calc(var(--slot) * 40)}
+/* whole day 5시~12시 at a glance: the timetable shares out the height that is left */
+.gut,.dbody{min-height:0}
+.wk .dtodo .ln{height:calc(var(--row) * .85)}
+.wk .dtodo .lab{height:12px;font-size:9.5px}
+.goals .ln{height:calc(var(--row) * .8)}
 .tthead{display:grid;grid-template-columns:var(--strip) var(--strip) 1fr;font-size:9px;color:var(--sub);border-right:1px solid var(--line);border-bottom:1px solid var(--line);line-height:1.6;--strip:13px}
 .tthead span{font-size:9px;text-align:center}
 .tthead span.tl{writing-mode:horizontal-tb;letter-spacing:0;font-size:10px;line-height:1.6;padding-left:4px;text-align:left}
