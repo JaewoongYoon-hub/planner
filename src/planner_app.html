@@ -104,7 +104,7 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .dhead .dw{font-size:12px}
 .dtodo{padding:2px 5px 4px;border-right:1px solid var(--line);min-width:0}
 .dtodo .lab{font-size:10px;color:var(--sub);height:14px}
-.tt{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;border-top:1px solid var(--line);overflow:hidden}
+.tt{display:grid;grid-template-rows:minmax(0,1fr);min-height:0;border-top:1px solid var(--line);overflow:hidden}
 .tt > .tthead{position:sticky;top:0;z-index:5;background:var(--paper)}
 /* whole day 5시~12시 at a glance: the timetable shares out the height that is left */
 .gut,.dbody{min-height:0}
@@ -525,7 +525,6 @@ function dayColumns(days){
   const tt = h("div",{class:"tt",style:`grid-template-columns:${cols}`});
   const gut = h("div",{class:"gut"});
   for(let k=0;k<SLOTS;k++) gut.append(h("div",{class:"gl"+(k%2?" half":"")+(isLunch(k)?" lunch":"")}, k%2 ? "" : h("span",{class:"gn"},hourLabel(5+k/2))));
-  tt.append(h("div",{class:"tthead"}), ...days.map(()=>h("div",{class:"tthead"},h("span",{class:"pa",title:"계획"},"계획"),h("span",{class:"pa",title:"실행"},"실행"),h("span",{class:"tl"}))));
   tt.append(gut);
   days.forEach(d=>tt.append(dayBody(d)));
   return h("div",{class:"wk"}, head, todo, tt);
