@@ -1148,6 +1148,15 @@ document.addEventListener("keydown", e=>{
   }, {passive:true});
 })();
 render();
-initStore().then(()=>{});
+initStore().then(()=>{
+  // 설정 링크(#ol=ICS주소 또는 #olvia=도우미주소)로 열면 아웃룩 연결을 자동으로 채운다. 주소는 계정에만 저장되고 주소창에서 지운다
+  const hp = new URLSearchParams((location.hash||"").slice(1));
+  const ics = hp.get("ol"), via = hp.get("olvia");
+  if(ics || via){
+    edit(OL_DOC, x=>{ x.on = "1"; if(ics) x.ics = ics.trim(); if(via) x.via = via.trim(); });
+    try{ history.replaceState(null, "", location.pathname + location.search); }catch(e){}
+    render(); olDialog(); olFetch(true);
+  }
+});
 })();
 </script>
