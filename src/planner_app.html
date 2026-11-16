@@ -496,7 +496,7 @@ function monthPage(y, m, isLeft){
 }
 function legend(){
   return h("div",{class:"legend"},
-    h("span",null,h("i",null,"□"),"중요한 일"),h("span",null,h("i",null,"/"),"진행중"),h("span",null,h("i",null,"✕"),"완료"),
+    h("span",null,h("i",null,"/"),"진행중"),h("span",null,h("i",null,"✕"),"완료"),
     h("span",null,h("i",null,"←"),"취소"),h("span",null,h("i",null,"→"),"연기·위임"));
 }
 const hourLabel = hr => String(hr>12 ? hr-12 : hr);
