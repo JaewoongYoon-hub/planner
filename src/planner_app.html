@@ -7,7 +7,7 @@
 :root{
   --paper:#FFFFFF; --ink:#454B52; --sub:#8A9098; --line:#BCC1C7; --faint:#DADDE1;
   --fill:#ECEEF1; --sunf:#F4F5F7; --red:#D9534F; --blue:#4A78B5; --acc:#E05A5F;
-  --lunch:#FCEFE3; --blkbg:#FBEDEC; --actbg:#EAF0F8; --gutter:#E4E7EA; --onacc:#FFFFFF; --focus:#4A78B5;
+  --ol:#6E56CF; --olbg:#EEEAFB; --lunch:#FCEFE3; --blkbg:#FBEDEC; --actbg:#EAF0F8; --gutter:#E4E7EA; --onacc:#FFFFFF; --focus:#4A78B5;
   --f-num:"Inter",system-ui,sans-serif;
   --f-text:"Noto Sans KR","Inter",system-ui,sans-serif;
   --row:clamp(18px,3.1vh,26px);
@@ -15,11 +15,11 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --paper:#1E2124; --ink:#D5D9DE; --sub:#8C939B; --line:#4A5057; --faint:#34393E;
   --fill:#2A2E33; --sunf:#24282C; --red:#EA6E6A; --blue:#7FA4D8; --acc:#E0666B;
-  --lunch:#3A2E24; --blkbg:#3A2B2C; --actbg:#26303D; --gutter:#15171A; --onacc:#FFFFFF; --focus:#7FA4D8; color-scheme:dark}}
+  --ol:#A893F0; --olbg:#2C2640; --lunch:#3A2E24; --blkbg:#3A2B2C; --actbg:#26303D; --gutter:#15171A; --onacc:#FFFFFF; --focus:#7FA4D8; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#1E2124; --ink:#D5D9DE; --sub:#8C939B; --line:#4A5057; --faint:#34393E;
   --fill:#2A2E33; --sunf:#24282C; --red:#EA6E6A; --blue:#7FA4D8; --acc:#E0666B;
-  --lunch:#3A2E24; --blkbg:#3A2B2C; --actbg:#26303D; --gutter:#15171A; --onacc:#FFFFFF; --focus:#7FA4D8; color-scheme:dark}
+  --ol:#A893F0; --olbg:#2C2640; --lunch:#3A2E24; --blkbg:#3A2B2C; --actbg:#26303D; --gutter:#15171A; --onacc:#FFFFFF; --focus:#7FA4D8; color-scheme:dark}
 
 html,body{height:100%}
 body{background:var(--gutter);color:var(--ink);font-family:var(--f-text);font-size:13px;
@@ -138,6 +138,22 @@ input::placeholder,textarea::placeholder{color:var(--line)}
 .blk.done{border-left-color:var(--blue)}
 .blk.actonly{border-left-color:var(--blue);background:var(--actbg)}
 .pl.actonly b{color:var(--blue)}
+.blk.ol{border-left:2px solid var(--ol);background:var(--olbg);z-index:2}
+.pl.ol{color:var(--ol)} .pl.ol b{color:var(--ol)}
+.olday{display:block;width:100%;text-align:left;font-size:calc(10.5px * var(--ts,1));line-height:1.45;color:var(--ink);background:var(--olbg);border-left:2px solid var(--ol);border-radius:2px;padding:0 4px;margin:1px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pmi.pmo{background:var(--olbg)}
+.pai.ol{border-left-color:var(--ol);background:var(--olbg)}
+.tab.oltab.on{color:var(--ol);background:var(--olbg);border-color:var(--ol);border-style:solid}
+.olday.ph{visibility:hidden}
+.olt{font-size:15px;font-weight:500;color:var(--ink);overflow-wrap:anywhere}
+.olm{font-size:12px;color:var(--sub);line-height:1.5;overflow-wrap:anywhere}
+.olm.err{color:var(--red)}
+.olin,.olin1{font:inherit;font-size:12px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:5px;padding:6px 8px;width:100%;resize:vertical}
+.olin.code{font-family:ui-monospace,Menlo,monospace;font-size:11px;background:var(--sunf)}
+.olhelp summary{font-size:12px;color:var(--blue);cursor:pointer;padding:4px 0}
+.olhelp{display:flex;flex-direction:column;gap:6px}
+.olsteps{margin:4px 0 4px 18px;padding:0;font-size:12px;color:var(--ink);line-height:1.6}
+.ed.oldlg{max-width:520px;margin:0 auto}
 .scrim{position:fixed;inset:0;z-index:40;background:transparent}
 .ed{position:fixed;z-index:41;width:min(330px,calc(100vw - 16px));background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:8px;
   box-shadow:0 8px 28px rgba(0,0,0,.18);padding:12px;display:flex;flex-direction:column;gap:7px}
@@ -473,6 +489,7 @@ function monthPage(y, m, isLeft){
     for(let j=0;j<n;j++) body.append(itemLine(dayId(d),"todos",j,{nav:`m-${k}`, grow:true}));
     blocksOf(d).filter(b=>(b.t||"").trim()).sort((a,b)=>startOf(a)-startOf(b)).forEach(b=>{
       body.append(h("button",{class:"pl"+(b.s==null?" actonly":""),title:"주간 시간표에서 보기",onclick:()=>go("week",d)},h("b",null,fmtT(startOf(b))),b.t)); });
+    olDay(d).forEach(x=>body.append(h("button",{class:"pl ol",title:"아웃룩 일정",onclick:e=>olShow(x,d,e.currentTarget)},h("b",null,x.a?"종일":fmtT(x.s)),x.t)));
     grid.append(h("div",{class:cls},
       h("div",{class:"top"},
         h("button",{class:numCls,title:"이 주의 주간 페이지로",onclick:()=>go("week",d)}, String(d.getDate())),
@@ -502,7 +519,8 @@ function legend(){
 const hourLabel = hr => String(hr>12 ? hr-12 : hr);
 
 /* ---------- weekly spread ---------- */
-function dayColumns(days){
+function dayColumns(days, olRows){
+  if(olRows==null) olRows = Math.max(0, ...days.map(d=>olDay(d).filter(x=>x.a).length));
   const n = days.length;
   const cols = `28px repeat(${n},minmax(0,1fr))`;
   const head = h("div",{class:"wkcols",style:`grid-template-columns:${cols}`});
@@ -519,6 +537,9 @@ function dayColumns(days){
       hol ? h("span",{class:"hol"},hol) : OBS[k] ? h("span",{class:"obs"},OBS[k]) : null,
       h("span",{class:"lun"},lunar(d))));
     const box = h("div",{class:"dtodo"}, h("div",{class:"lab"},"할 일"));
+    const alld = olDay(d).filter(x=>x.a);
+    alld.forEach(x=>box.append(h("button",{class:"olday",title:"아웃룩 종일 일정",onclick:e=>olShow(x,d,e.currentTarget)},x.t)));
+    for(let j=alld.length;j<olRows;j++) box.append(h("div",{class:"olday ph","aria-hidden":"true"},"\u00a0"));
     for(let j=0;j<maxRows;j++) box.append(itemLine(dayId(d),"todos",j,{nav:`w-${k}`, grow:true}));
     todo.append(box);
   });
@@ -552,12 +573,19 @@ function dayBody(d){
   const body = h("div",{class:"dbody","aria-label":`${d.getMonth()+1}월 ${d.getDate()}일 시간표`});
   for(let k=0;k<SLOTS;k++) body.append(h("div",{class:"row"+(k%2?" half":"")+(isLunch(k)?" lunch":""),style:`top:${pct(DAY_START+k*30)};height:${100/SLOTS}%`}));
   // lay out text boxes side by side where they overlap
-  const items = blocks.map((b,i)=>({b,i,s:startOf(b),e:startOf(b)+durOf(b)})).filter(x=>x.s!=null).sort((a,b)=>a.s-b.s||b.e-a.e);
+  const items = [...blocks.map((b,i)=>({b,i,s:startOf(b),e:startOf(b)+durOf(b)})).filter(x=>x.s!=null),
+    ...olDay(d).filter(x=>!x.a && x.e > DAY_START).map(x=>{ const s=Math.max(x.s,DAY_START); return {ol:x, s, e:Math.min(Math.max(x.e, s+20), DAY_END)}; })]
+    .sort((a,b)=>a.s-b.s||b.e-a.e);
   let cluster=[], clusterEnd=-1;
   const place = () => { const lanes=[]; cluster.forEach(x=>{ let l=lanes.findIndex(e=>e<=x.s); if(l<0){l=lanes.length;lanes.push(0);} lanes[l]=x.e; x.lane=l; }); cluster.forEach(x=>x.lanes=lanes.length); };
   items.forEach(x=>{ if(x.s>=clusterEnd && cluster.length){ place(); cluster=[]; } cluster.push(x); clusterEnd=Math.max(clusterEnd,x.e); });
   if(cluster.length) place();
-  items.forEach(({b,i,lane,lanes})=>{
+  items.forEach(({b,i,lane,lanes,ol,s,e})=>{
+    if(ol){ const w = `((100% - var(--strips)) / ${lanes})`;
+      body.append(h("button",{class:"blk ol"+(e-s<=30?" short":""),title:`아웃룩 · ${olTime(ol)}`,
+        style:`top:${pct(s)};height:calc(${(e-s)/(DAY_END-DAY_START)*100}% - 1px);left:calc(var(--strips) + ${w} * ${lane});width:calc(${w} - 2px)`,
+        onclick:ev=>{ ev.stopPropagation(); olShow(ol, d, ev.currentTarget); }}, h("span",null,ol.t)));
+      return; }
     const open = e => { e.stopPropagation(); openEditor(d, i, null, e.currentTarget); };
     if(b.s!=null) body.append(h("div",{class:"bar plan",style:`top:${pct(b.s)};height:calc(${b.d/(DAY_END-DAY_START)*100}% - 1px)`}));
     if(b.as!=null) body.append(h("div",{class:"bar act",style:`top:${pct(b.as)};height:calc(${b.ad/(DAY_END-DAY_START)*100}% - 1px)`}));
@@ -679,7 +707,7 @@ function fitEditor(){
   if(r.bottom > top + vh - 8) ed.style.top = Math.max(top + 8, top + vh - r.height - 8) + "px";
 }
 if(window.visualViewport){ visualViewport.addEventListener("resize", fitEditor); visualViewport.addEventListener("scroll", fitEditor); }
-function closeEditor(){ document.querySelectorAll(".ed,.scrim").forEach(e=>e.remove()); ed=null; }
+function closeEditor(){ document.querySelectorAll(".ed,.scrim").forEach(e=>e.remove()); ed=null; olDlg=null; }
 
 /* phone: one day at a time, with the week's days in a strip on top */
 const isPhone = () => innerWidth < 700;
@@ -722,7 +750,8 @@ function phoneMonth(y, m){
     const dw = d.getDay(), hol = HOLI[k];
     const c = hol||dw===0 ? " red" : dw===6 ? " blue" : "";
     const items = [...todos(d).filter(t=>t&&(t.t||"").trim()).map(t=>({t:t.t, k:"todo"+(t.s===2?" done":t.s===3?" cancel":"")})),
-      ...blocksOf(d).filter(b=>(b.t||"").trim()).sort((a,b)=>startOf(a)-startOf(b)).map(b=>({t:b.t, k:"pmb"}))];
+      ...blocksOf(d).filter(b=>(b.t||"").trim()).sort((a,b)=>startOf(a)-startOf(b)).map(b=>({t:b.t, k:"pmb"})),
+      ...olDay(d).map(x=>({t:x.t, k:"pmo"}))];
     grid.append(h("button",{class:"pmc"+(dw===0?" sun":"")+(k===iso(today)?" today":"")+(k===iso(monthSel)?" sel":""),
       onclick:()=>{ monthSel = d; render(); }, "aria-label":`${m+1}월 ${d.getDate()}일`},
       h("span",{class:"pmn"+c}, String(d.getDate())),
@@ -744,6 +773,9 @@ function phoneMonth(y, m){
     onclick:e=>openEditor(d,i,null,e.currentTarget)},
     h("span",{class:"pat"}, `${fmtT(startOf(b))}~${fmtT(startOf(b)+durOf(b))}`), h("span",{class:"pax"}, b.t||""))));
   agenda.append(h("button",{class:"btn",style:"margin-top:6px;align-self:flex-start",onclick:e=>openEditor(d,-1,{t:"",s:540,d:60},e.currentTarget)},"+ 일정 추가"));
+  const ols = olDay(d);
+  if(ols.length){ agenda.append(h("div",{class:"lab",style:"margin-top:8px"},"아웃룩"));
+    ols.forEach(x=>agenda.append(h("button",{class:"pai ol",onclick:e=>olShow(x,d,e.currentTarget)}, h("span",{class:"pat"},olTime(x)), h("span",{class:"pax"},x.t)))); }
   const goals = h("details",{class:"pgoals"}, h("summary",null,"이달의 목표 · 잊지 말 것"),
     h("div",{class:"goals",style:"grid-template-columns:repeat(2,minmax(0,1fr));border-top:0"}, goalsBox(ym,["forget","work","personal","study"])));
   try{ if(lsRead("plandoPlanner.goalsOpen")) goals.open = true; }catch(e){}
@@ -770,20 +802,261 @@ function weekSpread(){
     left ? legend() : h("div",{class:"nav"},
       h("button",{onclick:()=>go("week",addDays(mon,-7)),"aria-label":"이전 주"},"◀ 이전 주"),
       h("button",{onclick:()=>go("week",addDays(mon,7)),"aria-label":"다음 주"},"다음 주 ▶")));
-  const wid = weekId(mon);
+  const wid = weekId(mon), olRows = Math.max(0, ...days.map(d=>olDay(d).filter(x=>x.a).length));
   const note = h("textarea",{id:`${wid}-note`,"aria-label":"이번 주 메모", value:null,
     oninput:()=>edit(wid, x=>{ x.note = note.value; })});
   note.value = (docGet(wid)||{}).note || "";
   const left = h("section",{class:"page","aria-label":"주간 월~수"}, hdr(true),
     h("div",{class:"goals",style:"grid-template-columns:repeat(3,minmax(0,1fr))"}, goalsBox(ym,["forget","work","personal"])),
-    dayColumns(days.slice(0,3)),
+    dayColumns(days.slice(0,3), olRows),
     h("div",{class:"foot"},h("span",{id:"save",class:"save"},saveText[0])));
   const right = h("section",{class:"page","aria-label":"주간 목~일"}, hdr(false),
     h("div",{class:"goals",style:"grid-template-columns:minmax(0,1fr) minmax(0,2fr)"}, goalsBox(ym,["study"]),
       h("section",{class:"wnote box"},h("h3",{"aria-hidden":"true"}," "),note)),
-    dayColumns(days.slice(3)),
+    dayColumns(days.slice(3), olRows),
     h("div",{class:"foot"},"빈 칸을 누르면 일정 추가 · 실적 줄을 누르면 '계획대로 함' 표시 · 할 일은 월간과 같은 내용"));
   return [left,right];
+}
+
+/* ---------- 아웃룩 일정 (보기 전용) ----------
+   설정은 계정에 저장(zoutlook: on, ics, via), 받아 온 일정은 이 기기에 보관해서 오프라인에서도 보인다.
+   스위치를 끄면 화면에서만 사라지고 내가 쓴 일정은 그대로다. */
+const OL_DOC = "zoutlook", OL_CACHE = "plandoPlanner.outlook";
+let olCache = lsRead(OL_CACHE), olErr = "", olBusy = false;
+const olCfg = () => docGet(OL_DOC) || {};
+const olSrc = () => { const c = olCfg(); return ((c.via||"").trim() || (c.ics||"").trim()).replace(/^webcal:/i,"https:"); };
+const olOn = () => olCfg().on === "1" && !!olSrc();
+function olDay(d){ if(!olOn() || !olCache || olCache.url !== olSrc()) return []; return (olCache.ev||{})[iso(d)] || []; }
+const DOWS = ["SU","MO","TU","WE","TH","FR","SA"];
+function icsParse(text){
+  const lines = text.replace(/\r?\n[ \t]/g,"").split(/\r?\n/);
+  const tz = {}, evs = []; let cur = null, tzc = null, sub = null;
+  const unesc = v => v.replace(/\\n/gi," ").replace(/\\([,;\\])/g,"$1").trim();
+  for(const raw of lines){
+    if(!raw) continue;
+    let q = false, ci = -1;
+    for(let i=0;i<raw.length;i++){ const ch = raw[i]; if(ch==='"') q=!q; else if(ch===":" && !q){ ci=i; break; } }
+    if(ci<0) continue;
+    const head = raw.slice(0,ci), value = raw.slice(ci+1), parts = head.split(";"), name = parts[0].toUpperCase(), p = {};
+    parts.slice(1).forEach(s=>{ const j=s.indexOf("="); if(j>0) p[s.slice(0,j).toUpperCase()] = s.slice(j+1).replace(/^"|"$/g,""); });
+    if(name==="BEGIN"){ if(value==="VEVENT") cur={ex:[]}; else if(value==="VTIMEZONE") tzc={}; else if(tzc && (value==="STANDARD"||value==="DAYLIGHT")) sub={kind:value}; continue; }
+    if(name==="END"){ if(value==="VEVENT"&&cur){ evs.push(cur); cur=null; } else if(value==="VTIMEZONE"&&tzc){ if(tzc.id) tz[tzc.id]=tzc; tzc=null; } else if(sub && value===sub.kind){ tzc[sub.kind]=sub; sub=null; } continue; }
+    if(sub){ if(name==="TZOFFSETTO"){ const m=/([+-])(\d\d)(\d\d)/.exec(value); sub.off = m ? (m[1]==="-"?-1:1)*(+m[2]*60+ +m[3]) : 0; }
+      else if(name==="DTSTART") sub.start=value; else if(name==="RRULE") sub.rr=rrParse(value); continue; }
+    if(tzc){ if(name==="TZID") tzc.id=value; continue; }
+    if(!cur) continue;
+    if(name==="SUMMARY") cur.t=unesc(value);
+    else if(name==="LOCATION") cur.loc=unesc(value);
+    else if(name==="DTSTART") cur.ds={v:value,p};
+    else if(name==="DTEND") cur.de={v:value,p};
+    else if(name==="DURATION") cur.dur=value;
+    else if(name==="RRULE") cur.rr=rrParse(value);
+    else if(name==="EXDATE") value.split(",").forEach(v=>cur.ex.push({v,p}));
+    else if(name==="RECURRENCE-ID") cur.rid={v:value,p};
+    else if(name==="UID") cur.uid=value;
+    else if(name==="STATUS") cur.status=value.toUpperCase();
+    else if(name==="X-MICROSOFT-CDO-ALLDAYEVENT") cur.allday = /TRUE/i.test(value);
+  }
+  return {evs, tz};
+}
+function rrParse(v){ const r={}; v.split(";").forEach(s=>{ const j=s.indexOf("="); if(j>0) r[s.slice(0,j).toUpperCase()]=s.slice(j+1); }); return r; }
+function nthDow(Y, mo, spec){
+  const m = /^([+-]?\d{1,2})?(MO|TU|WE|TH|FR|SA|SU)$/.exec(spec); if(!m) return 0;
+  const n = +(m[1]||1), dow = DOWS.indexOf(m[2]), last = new Date(Date.UTC(Y,mo,0)).getUTCDate();
+  if(n>0){ const f = new Date(Date.UTC(Y,mo-1,1)).getUTCDay(); return 1+((dow-f+7)%7)+(n-1)*7; }
+  const l = new Date(Date.UTC(Y,mo-1,last)).getUTCDay(); return last-((l-dow+7)%7)+(n+1)*7;
+}
+function allDow(Y, mo, spec){ const out=[]; for(let k=1;k<=5;k++){ const d=nthDow(Y,mo,k+spec.slice(-2)); if(d<=new Date(Date.UTC(Y,mo,0)).getUTCDate()) out.push(d); } return out; }
+function tzOff(z, Y, M, D, hh, mm){
+  const S = z.STANDARD, L = z.DAYLIGHT; if(!S || !L) return (S||L||{off:0}).off;
+  const tr = s => { if(!s.rr || !s.rr.BYMONTH || !s.rr.BYDAY) return null; const mo=+s.rr.BYMONTH, t=(s.start||"").split("T")[1]||"020000";
+    return Date.UTC(Y,mo-1,nthDow(Y,mo,s.rr.BYDAY),+t.slice(0,2),+t.slice(2,4)); };
+  const a = tr(L), b = tr(S); if(a==null || b==null) return S.off;
+  const w = Date.UTC(Y,M-1,D,hh,mm), dst = a<b ? (w>=a && w<b) : (w>=a || w<b);
+  return dst ? L.off : S.off;
+}
+function toMs(dt, tz){
+  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})?(Z)?)?$/.exec((dt&&dt.v)||""); if(!m) return null;
+  const Y=+m[1], M=+m[2], D=+m[3];
+  if(m[4]==null) return {all:true, ms:new Date(Y,M-1,D).getTime()};
+  const hh=+m[4], mi=+m[5], ss=+(m[6]||0);
+  if(m[7]) return {ms:Date.UTC(Y,M-1,D,hh,mi,ss)};
+  const z = dt.p && dt.p.TZID && tz[dt.p.TZID];
+  if(!z) return {ms:new Date(Y,M-1,D,hh,mi,ss).getTime()};
+  return {ms:Date.UTC(Y,M-1,D,hh,mi,ss) - tzOff(z,Y,M,D,hh,mi)*60000};
+}
+function durMs(v){ const m=/^([+-])?P(?:(\d+)W)?(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(v||""); if(!m) return 0;
+  return (m[1]==="-"?-1:1)*((+(m[2]||0)*7 + +(m[3]||0))*86400000 + +(m[4]||0)*3600000 + +(m[5]||0)*60000 + +(m[6]||0)*1000); }
+function expand(ev, tz, from, to){
+  const st = toMs(ev.ds, tz); if(!st) return null;
+  let dur = ev.de ? ((toMs(ev.de,tz)||st).ms - st.ms) : ev.dur ? durMs(ev.dur) : (st.all ? 86400000 : 0);
+  const res = {starts:[], dur, all:!!st.all};
+  if(!ev.rr){ if(st.ms < to && st.ms + Math.max(dur,1) > from) res.starts.push(st.ms); return res; }
+  const r = ev.rr, freq = r.FREQ, iv = Math.max(1, +(r.INTERVAL||1)), count = r.COUNT ? +r.COUNT : Infinity;
+  const um = r.UNTIL ? toMs({v:r.UNTIL, p:ev.ds.p}, tz) : null, until = um ? um.ms + (um.all ? 86400000-1 : 0) : Infinity;
+  const ex = new Set(ev.ex.map(x=>(toMs(x,tz)||{}).ms));
+  const m = /^(\d{4})(\d{2})(\d{2})(T.*)?$/.exec(ev.ds.v), tp = m[4]||"", Y0=+m[1], M0=+m[2], D0=+m[3], base = Date.UTC(Y0,M0-1,D0);
+  const byday = r.BYDAY ? r.BYDAY.split(",") : null, bymd = r.BYMONTHDAY ? r.BYMONTHDAY.split(",").map(Number) : null;
+  const bymo = r.BYMONTH ? r.BYMONTH.split(",").map(Number) : null, setpos = r.BYSETPOS ? +r.BYSETPOS : 0;
+  const mk = (y,mo,d) => toMs({v:`${y}${pad(mo)}${pad(d)}${tp}`, p:ev.ds.p}, tz).ms;
+  const ymd = t => { const x=new Date(t); return [x.getUTCFullYear(), x.getUTCMonth()+1, x.getUTCDate()]; };
+  const inMonth = (y,mo) => { const last=new Date(Date.UTC(y,mo,0)).getUTCDate();
+    let ds = bymd ? bymd.map(x=>x<0?last+1+x:x) : byday ? byday.flatMap(s=>/^[+-]?\d/.test(s)?[nthDow(y,mo,s)]:allDow(y,mo,s)) : [D0];
+    ds = ds.filter(d=>d>=1 && d<=last).sort((a,b)=>a-b);
+    if(setpos) ds = [setpos>0 ? ds[setpos-1] : ds[ds.length+setpos]].filter(Boolean);
+    return ds.map(d=>[y,mo,d]); };
+  let n = 0;
+  for(let p=0; p<6000; p++){
+    let c = [];
+    if(freq==="DAILY") c = [ymd(base + p*iv*86400000)];
+    else if(freq==="WEEKLY"){ const wk = DOWS.indexOf(r.WKST||"MO"), bd = new Date(base).getUTCDay(), ws = base - ((bd-wk+7)%7)*86400000 + p*iv*7*86400000;
+      c = (byday ? byday.map(s=>DOWS.indexOf(s.slice(-2))) : [bd]).map(dw=>ymd(ws + ((dw-wk+7)%7)*86400000)); }
+    else if(freq==="MONTHLY"){ const t=(M0-1)+p*iv; c = inMonth(Y0+Math.floor(t/12), t%12+1); }
+    else if(freq==="YEARLY"){ const y=Y0+p*iv; c = (bymo||[M0]).flatMap(mo=>inMonth(y,mo)); }
+    else break;
+    c.sort((a,b)=>(a[0]-b[0])||(a[1]-b[1])||(a[2]-b[2]));
+    let stop = false;
+    for(const x of c){ const ms = mk(...x); if(ms < st.ms) continue;
+      if(ms > until || n >= count || ms >= to){ stop = true; break; }
+      n++; if(!ex.has(ms) && ms + Math.max(dur,1) > from) res.starts.push(ms); }
+    if(stop) break;
+  }
+  return res;
+}
+function olBuild(text){
+  const {evs, tz} = icsParse(text);
+  const from = addDays(today,-200).getTime(), to = addDays(today,430).getTime();
+  const moved = {}; evs.forEach(e=>{ if(e.rid && e.uid){ const r=toMs(e.rid,tz); if(r) (moved[e.uid]=moved[e.uid]||new Set()).add(r.ms); } });
+  const days = {}; let count = 0;
+  const put = (k,x) => (days[k]=days[k]||[]).push(x);
+  const mid = d => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+  for(const e of evs){
+    if(!e.ds || e.status==="CANCELLED") continue;
+    const r = expand(e, tz, from, to); if(!r) continue;
+    const skip = !e.rid && e.uid && moved[e.uid];
+    const t = (e.t||"").trim() || "(제목 없음)", loc = e.loc || "";
+    for(const s0 of r.starts){
+      if(skip && skip.has(s0)) continue;
+      count++;
+      const e1 = s0 + Math.max(r.dur, 0), d0 = new Date(s0);
+      if(r.all || e.allday){
+        for(let i=0;i<62;i++){ const dd = mkDate(d0.getFullYear(), d0.getMonth(), d0.getDate()+i); if(i>0 && mid(dd) >= e1 - 3600000) break; put(iso(dd), {t, a:1, loc}); }
+      } else {
+        for(let i=0;i<14;i++){ const dd = mkDate(d0.getFullYear(), d0.getMonth(), d0.getDate()+i), m0 = mid(dd); if(i>0 && m0 >= e1) break;
+          const s = Math.max(0, Math.round((s0-m0)/60000)), en = Math.min(1440, Math.round((e1-m0)/60000));
+          put(iso(dd), {t, s, e:Math.max(en, s), loc}); if(e1 <= m0 + 86400000) break; }
+      }
+    }
+  }
+  for(const k in days) days[k].sort((a,b)=>(b.a||0)-(a.a||0) || (a.s||0)-(b.s||0));
+  return {days, count};
+}
+async function olFetch(force){
+  if(!olOn() || olBusy) return;
+  const url = olSrc();
+  if(!force && olCache && olCache.url === url && Date.now() - olCache.at < 30*60000) return;
+  if(!force && !navigator.onLine) return;
+  olBusy = true; olErr = ""; olRefreshDialog();
+  try{
+    const r = await fetch(url, {cache:"no-store"});
+    if(!r.ok) throw new Error("http");
+    const text = await r.text();
+    if(!/BEGIN:VCALENDAR/.test(text)) throw new Error("notics");
+    const b = olBuild(text);
+    olCache = {url, at:Date.now(), ev:b.days, n:b.count};
+    lsWrite(OL_CACHE, olCache);
+    requestRender();
+  }catch(e){
+    olErr = !navigator.onLine ? "인터넷이 연결되지 않았습니다. 연결되면 다시 가져옵니다."
+      : e.message==="notics" ? "받은 내용이 일정 파일이 아닙니다. 주소를 확인해 주세요."
+      : e.message==="http" ? "주소에서 일정을 받지 못했습니다. 아웃룩에서 게시가 취소됐거나 주소가 바뀌었을 수 있습니다."
+      : "브라우저가 아웃룩 주소에 바로 접속하지 못했습니다. 아래 '연결 도우미'를 만들어 주소를 넣어 주세요.";
+  }
+  olBusy = false; olRefreshDialog();
+}
+setInterval(()=>olFetch(false), 60000);
+addEventListener("online", ()=>olFetch(false));
+document.addEventListener("visibilitychange", ()=>{ if(!document.hidden) olFetch(false); });
+setTimeout(()=>olFetch(false), 1500);
+
+function olTime(x){ return x.a ? "종일" : `${fmtT(x.s)}~${fmtT(x.e)}`; }
+function olShow(x, d, anchorEl){
+  closeEditor();
+  const copy = () => {
+    const s = Math.max(DAY_START, Math.min(x.s, DAY_END-30)), e = Math.max(s+30, Math.min(x.e, DAY_END));
+    saveBlocks(d, [...blocksOf(d).map(b=>({...b})), {id:Math.random().toString(36).slice(2,8), t:x.t, s, d:e-s}]); closeEditor(); render(); };
+  ed = h("div",{class:"ed",role:"dialog","aria-label":"아웃룩 일정"},
+    h("div",{class:"edtitle"}, `${d.getMonth()+1}월 ${d.getDate()}일 (${DOW_MON[(d.getDay()+6)%7]}) · 아웃룩 일정`),
+    h("div",{class:"olt"}, x.t),
+    h("div",{class:"olm"}, olTime(x) + (x.loc ? " · " + x.loc : "")),
+    h("div",{class:"olm"}, "아웃룩에서 가져온 일정이라 여기서는 고칠 수 없어요. 내 계획으로 복사하면 실적도 표시할 수 있어요."),
+    h("div",{class:"edbtns"}, x.a ? h("span") : h("button",{type:"button",class:"btn",onclick:copy},"내 계획으로 복사"),
+      h("span",{class:"sp"}), h("button",{type:"button",class:"btn pri",onclick:closeEditor},"닫기")));
+  const scrim = h("div",{class:"scrim",onclick:closeEditor});
+  document.body.append(scrim, ed);
+  const r = anchorEl.getBoundingClientRect(), W = ed.offsetWidth, H = ed.offsetHeight;
+  if(innerWidth <= 860) ed.classList.add("sheet");
+  else { let px = r.right + 8; if(px + W > innerWidth - 8) px = r.left - W - 8;
+    ed.style.left = Math.max(8, Math.min(px, innerWidth - W - 8)) + "px"; ed.style.top = Math.max(8, Math.min(r.top - 20, innerHeight - H - 8)) + "px"; }
+}
+/* 설정 창 */
+let olDlg = null;
+function olScript(ics){
+  return `function doGet() {
+  var url = '${(ics||"여기에_아웃룩_ICS_주소").replace(/'/g,"")}';
+  var res = UrlFetchApp.fetch(url, {muteHttpExceptions: true});
+  return ContentService.createTextOutput(res.getContentText()).setMimeType(ContentService.MimeType.TEXT);
+}`;
+}
+function olRefreshDialog(){ if(olDlg && olDlg.refresh) olDlg.refresh(); }
+function olDialog(){
+  closeEditor();
+  const c = olCfg();
+  const st = {on: c.on==="1", ics: c.ics||"", via: c.via||""};
+  const save = () => { edit(OL_DOC, x=>{ x.on = st.on ? "1" : ""; x.ics = st.ics.trim(); x.via = st.via.trim(); }); };
+  const sw = () => chips("olon", [[true,"켜기"],[false,"끄기"]], st.on, "아웃룩 일정 표시", v=>{ st.on=v; save(); render(); if(v) olFetch(true); olDlg.refresh(); });
+  let swEl = sw();
+  const ics = h("textarea",{class:"olin",rows:3,placeholder:"https://outlook.office365.com/owa/calendar/…/calendar.ics",
+    oninput:()=>{ st.ics = ics.value; code.value = olScript(st.ics.trim()); }});
+  ics.value = st.ics;
+  const via = h("input",{class:"olin1",placeholder:"https://script.google.com/macros/s/…/exec",autocomplete:"off",oninput:()=>{ st.via = via.value; }});
+  via.value = st.via;
+  const code = h("textarea",{class:"olin code",rows:5,readonly:true}); code.value = olScript(st.ics.trim());
+  const status = h("div",{class:"olm"});
+  const copyBtn = h("button",{type:"button",class:"btn",onclick:async()=>{ try{ await navigator.clipboard.writeText(code.value); copyBtn.textContent="복사됨"; }catch(e){ code.select(); } }},"코드 복사");
+  const box = h("div",{class:"ed oldlg",role:"dialog","aria-label":"아웃룩 일정 연동"},
+    h("div",{class:"olt"},"아웃룩 일정 (보기 전용)"),
+    h("div",{class:"olm"},"아웃룩 일정이 월간·주간에 보라색으로 보입니다. 끄면 화면에서 사라지고, 내가 쓴 일정은 그대로입니다."),
+    swEl,
+    h("div",{class:"edlab"},"아웃룩 ICS 주소"), ics,
+    h("details",{class:"olhelp", open: !!st.via || undefined},
+      h("summary",null,"연결 도우미 (바로 연결이 안 될 때)"),
+      h("div",{class:"olm"},"회사 아웃룩은 브라우저에서 바로 못 가져오는 경우가 많아요. 구글 계정으로 아래처럼 한 번만 만들면 됩니다."),
+      h("ol",{class:"olsteps"},
+        h("li",null,"PC에서 script.google.com 을 열고 '새 프로젝트'를 누릅니다."),
+        h("li",null,"안에 있던 글을 모두 지우고, 아래 코드를 붙여 넣은 뒤 저장합니다."),
+        h("li",null,"'배포 > 새 배포 > 유형: 웹 앱', 실행: 나, 액세스 권한: 모든 사용자 로 배포하고 권한을 허용합니다."),
+        h("li",null,"나온 웹 앱 주소(…/exec)를 아래 칸에 붙여 넣습니다.")),
+      code, h("div",{class:"edbtns"}, copyBtn),
+      h("div",{class:"edlab"},"연결 도우미 주소"), via),
+    status,
+    h("div",{class:"edbtns"},
+      h("button",{type:"button",class:"btn",onclick:()=>{ save(); olFetch(true); }},"지금 가져오기"),
+      h("span",{class:"sp"}),
+      h("button",{type:"button",class:"btn pri",onclick:()=>{ save(); closeEditor(); render(); olFetch(true); }},"저장하고 닫기")));
+  box.refresh = () => {
+    const nw = sw(); swEl.replaceWith(nw); swEl = nw;
+    const ok = olCache && olCache.url === olSrc();
+    status.textContent = !st.on ? "꺼져 있습니다." : olBusy ? "가져오는 중…" : olErr ? olErr
+      : ok ? `마지막으로 가져온 시각 ${new Date(olCache.at).toLocaleString("ko-KR",{month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit"})} · 일정 ${olCache.n||0}개` : "아직 가져오지 않았습니다.";
+    status.classList.toggle("err", !!olErr && st.on);
+    if(olErr && /연결 도우미/.test(olErr)) box.querySelector(".olhelp").open = true;
+  };
+  olDlg = ed = box;
+  const scrim = h("div",{class:"scrim",onclick:closeEditor});
+  document.body.append(scrim, box);
+  box.classList.add("sheet");
+  box.refresh();
 }
 
 /* ---------- text size (kept per device) ---------- */
@@ -805,6 +1078,7 @@ function renderTabs(){
     h("button",{class:"tab today",onclick:()=>go(ui.view,today)},"오늘"),
     h("button",{class:"tab today tsz",title:"글자 크기 (누를 때마다 바뀜)","aria-label":`글자 크기: ${TS_NAMES[tsIdx]}`,onclick:()=>{
       tsIdx = (tsIdx+1) % TS.length; lsWrite("plandoPlanner.textSize2", tsIdx); applyTs(); renderTabs(); }}, h("span",{class:"tsa"},"가"), h("small",null,TS_NAMES[tsIdx])),
+    h("button",{class:"tab today oltab"+(olOn()?" on":""),title:"아웃룩 일정 (보기 전용)",onclick:olDialog},"아웃룩"),
     h("div",{class:"cap"},String(yr)));
   for(let m=0;m<12;m++){
     t.append(h("button",{class:"tab sm"+(m===curMonth?" on":""),onclick:()=>{
